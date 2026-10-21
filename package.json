@@ -1,0 +1,21 @@
+{
+  "name": "cardiovision-pulse-monitor",
+  "version": "1.0.0",
+  "description": "Real-time contactless optical photoplethysmography (rPPG) vital sign & heart rate monitor using computer vision and digital signal processing.",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve -l 3001 .",
+    "test": "node test.js"
+  },
+  "author": "Sabhyam Trivedy <sabhyamtrivedy@gmail.com>",
+  "license": "MIT",
+  "keywords": [
+    "computer-vision",
+    "rppg",
+    "photoplethysmography",
+    "heart-rate-monitor",
+    "hrv",
+    "digital-signal-processing",
+    "vital-signs"
+  ]
+}

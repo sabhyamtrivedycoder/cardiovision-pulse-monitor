@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CardioVision - Contactless Optical PPG Vital Sign Monitor | Sabhyam Trivedy</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Space Grotesk & Orbitron & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-hud { font-family: 'Orbitron', monospace; }
+    .font-display { font-family: 'Space Grotesk', sans-serif; }
+    .glow-cyan { box-shadow: 0 0 30px rgba(6, 182, 212, 0.2); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800/80 bg-slate-900/70 backdrop-blur-md sticky top-0 z-50 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-emerald-400 flex items-center justify-center font-black text-slate-950 text-xl shadow-lg shadow-cyan-500/20">
+          ❤️
+        </div>
+        <div>
+          <h1 class="text-base md:text-lg font-bold font-display tracking-tight text-white flex items-center gap-2">
+            CardioVision <span class="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-500/30">Optical rPPG</span>
+          </h1>
+          <p class="text-xs text-slate-400">By <a href="https://github.com/sabhyamtrivedycoder" target="_blank" class="text-cyan-400 hover:underline">Sabhyam Trivedy</a> • 14yo AI Engineer & Founder</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="audioBeepBtn" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800/80 border border-slate-700 hover:border-slate-600 transition text-cyan-400 flex items-center gap-1.5">
+          🔊 Audio Beep: ON
+        </button>
+        <button id="exportBtn" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800/80 border border-slate-700 hover:border-slate-600 transition text-slate-300">
+          📥 Export CSV
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Grid -->
+  <main class="max-w-7xl mx-auto w-full p-4 flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 my-2">
+
+    <!-- Left (2 cols): Video Feed, ROI Box & Oscilloscope -->
+    <section class="lg:col-span-2 flex flex-col gap-4">
+      
+      <!-- Video & Target ROI Section -->
+      <div class="relative bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden aspect-video flex items-center justify-center glow-cyan">
+        
+        <video id="inputVideo" autoplay muted playsinline class="w-full h-full object-cover transform -scale-x-100"></video>
+        <canvas id="roiCanvas" class="hidden"></canvas>
+
+        <!-- Forehead Target ROI Reticle -->
+        <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+          <div class="w-48 h-36 border-2 border-dashed border-cyan-400/60 rounded-xl flex flex-col items-center justify-between p-2 shadow-2xl shadow-cyan-500/20 animate-pulse">
+            <span class="text-[10px] uppercase font-mono tracking-wider text-cyan-300 bg-slate-950/80 px-2 py-0.5 rounded">
+              Forehead ROI Reticle
+            </span>
+            <span class="text-[10px] text-slate-300 bg-slate-950/80 px-2 py-0.5 rounded">
+              Oxyhemoglobin Absorption
+            </span>
+          </div>
+        </div>
+
+        <!-- Mode Indicator Badge -->
+        <div class="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none z-10">
+          <span class="bg-slate-950/80 backdrop-blur border border-cyan-500/30 text-cyan-400 font-bold text-xs px-3.5 py-1.5 rounded-full uppercase tracking-wider font-display">
+            Face Capillary Mode
+          </span>
+          <div class="flex items-center gap-1.5 bg-slate-950/80 backdrop-blur border border-slate-700 px-3 py-1.5 rounded-full">
+            <span id="pulseIcon" class="text-rose-500 text-sm transition-transform duration-150">❤️</span>
+            <span class="text-xs text-slate-300 font-mono">Pulse Sync</span>
+          </div>
+        </div>
+
+        <!-- Start Overlay -->
+        <div id="startOverlay" class="absolute inset-0 bg-slate-950/95 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-20">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-emerald-400/20 border border-cyan-500/30 flex items-center justify-center text-3xl mb-4 text-cyan-400 shadow-xl shadow-cyan-500/10">
+            💓
+          </div>
+          <h2 class="text-2xl font-bold font-display text-white mb-2">Optical PPG Scanner</h2>
+          <p class="text-slate-400 text-sm max-w-md mb-6 leading-relaxed">
+            Extracts subtle microvascular blood volume pulsations from facial skin by tracking green spectrum light absorption across cardiac cycles.
+          </p>
+
+          <div class="flex flex-wrap items-center justify-center gap-3">
+            <button id="startCamBtn" class="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-cyan-500/25 transition transform active:scale-95 flex items-center gap-2">
+              <span>▶</span> Launch Camera
+            </button>
+            <button id="simDemoBtn" class="px-6 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-semibold rounded-xl transition flex items-center gap-2">
+              <span>🎮</span> Play Synthetic ECG/PPG Demo
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Oscilloscope Waveform Canvas -->
+      <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider font-display">
+            Photoplethysmogram (PPG) Real-Time Oscilloscope
+          </span>
+          <span class="text-xs text-emerald-400 font-mono">Passband: 0.75Hz - 3.33Hz</span>
+        </div>
+        <canvas id="oscilloscopeCanvas" class="w-full h-36 rounded-xl border border-slate-800"></canvas>
+      </div>
+
+      <!-- Controls -->
+      <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Detection Mode:</label>
+          <select id="modeSelect" class="bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-100 font-medium focus:outline-none focus:border-cyan-500">
+            <option value="face">Contactless Facial ROI</option>
+            <option value="finger">Fingertip Camera Lens</option>
+          </select>
+        </div>
+
+        <button id="resetBtn" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 transition">
+          🔄 Recalibrate Baseline
+        </button>
+      </div>
+    </section>
+
+    <!-- Right (1 col): Physiological Telemetry & Spectrum -->
+    <section class="flex flex-col gap-4">
+      <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 flex flex-col gap-5">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider font-display">Physiological Metrics</h3>
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+        </div>
+
+        <!-- Main BPM Card -->
+        <div class="bg-slate-950/80 border border-cyan-500/30 rounded-2xl p-5 text-center shadow-lg shadow-cyan-500/10">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Heart Rate</span>
+          <div class="flex items-baseline justify-center gap-2 mt-1">
+            <span id="bpmDisplay" class="text-5xl font-extrabold font-hud text-cyan-400">--</span>
+            <span class="text-sm font-bold text-slate-400">BPM</span>
+          </div>
+          <span class="text-[11px] text-slate-500 mt-1 block">Normal resting: 60 - 100 BPM</span>
+        </div>
+
+        <!-- 3-Col Metric Grid -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3 text-center">
+            <span class="text-xs text-slate-400 uppercase tracking-wider">HRV (RMSSD)</span>
+            <div id="hrvDisplay" class="text-2xl font-bold font-hud text-emerald-400 mt-1">--</div>
+          </div>
+          <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3 text-center">
+            <span class="text-xs text-slate-400 uppercase tracking-wider">Respiration</span>
+            <div id="respDisplay" class="text-2xl font-bold font-hud text-sky-400 mt-1">--</div>
+          </div>
+        </div>
+
+        <!-- Signal-to-Noise Ratio -->
+        <div class="flex items-center justify-between p-3.5 bg-slate-950/80 border border-slate-800/80 rounded-xl">
+          <span class="text-xs text-slate-400 font-medium">Signal-to-Noise (SNR):</span>
+          <span id="snrDisplay" class="text-sm font-bold text-amber-400 font-hud">0 dB</span>
+        </div>
+
+        <!-- Power Spectrum Frequency Canvas -->
+        <div class="flex flex-col gap-2 p-3.5 bg-slate-950/80 border border-slate-800/80 rounded-xl">
+          <div class="flex justify-between text-xs text-slate-400">
+            <span>Power Spectrum (FFT)</span>
+            <span class="font-mono text-cyan-400">0.6 - 3.2 Hz</span>
+          </div>
+          <canvas id="spectrumCanvas" class="w-full h-16 rounded border border-slate-800/80"></canvas>
+        </div>
+
+        <!-- Physics Principle -->
+        <div class="p-4 bg-slate-950/80 border border-slate-800/80 rounded-xl">
+          <h4 class="text-xs font-bold text-cyan-400 mb-1.5 uppercase tracking-wider">Bio-Photonic Principle</h4>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            During ventricular systole, blood volume pulses into facial microvascular beds. Oxygenated hemoglobin absorbs green photons (~540nm), causing periodic fluctuations in reflected luminance:
+          </p>
+          <p class="text-xs text-slate-400 mt-2 font-mono">
+            I(t) = I_0 &bull; exp(-&epsilon; &bull; C &bull; d(t)) &rArr; &Delta;G(t)
+          </p>
+        </div>
+      </div>
+
+      <!-- Author -->
+      <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center font-bold text-cyan-400">
+          ST
+        </div>
+        <div class="text-xs">
+          <div class="font-bold text-white">Sabhyam Trivedy</div>
+          <div class="text-slate-400">14-Year-Old AI Engineer & Entrepreneur</div>
+          <a href="https://github.com/sabhyamtrivedycoder" target="_blank" class="text-cyan-400 hover:underline">github.com/sabhyamtrivedycoder</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800/80 bg-slate-900/40 text-center py-3 text-xs text-slate-500">
+    © 2026 Sabhyam Trivedy • Open Source Photoplethysmography Vision Engine • MIT License
+  </footer>
+
+  <!-- Scripts -->
+  <script src="dsp-engine.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
